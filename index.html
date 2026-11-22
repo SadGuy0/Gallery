@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#11100f"><title>Memories — Private Library</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<section id="loginView" class="login">
+  <div class="login-panel"><div class="mark">m.</div><p class="eyebrow">YOUR PRIVATE LIBRARY</p>
+  <h1>All your days,<br><em>in one place.</em></h1>
+  <p class="muted">A quiet, personal space for the photos and videos you’ve kept.</p>
+  <button id="loginButton" class="primary">Continue with GitHub <span>↗</span></button>
+  <p class="fine">Only your authorized GitHub account can open this library.</p></div>
+  <div class="art"><div class="art-card one"></div><div class="art-card two"></div><div class="art-card three"></div><span>A lifetime, frame by frame.</span></div>
+</section>
+<main id="appView" hidden>
+<header class="topbar"><a class="brand" href="#"><b>m</b> memories</a>
+<nav><button class="nav-pill active" data-mode="photos">Photos</button><button class="nav-pill" data-mode="videos">Videos</button><button class="nav-pill" data-mode="all">Everything</button></nav>
+<div class="actions"><label class="search">⌕ <input id="search" placeholder="Search memories" type="search"></label><button id="logout" class="avatar" title="Sign out">S</button></div></header>
+<section class="welcome"><div><p class="eyebrow">YOUR COLLECTION</p><h1 id="pageTitle">Little moments,<br><em>kept forever.</em></h1><p class="muted">Browse by time, find a moment, or just wander.</p></div>
+<div class="filters"><select id="year"><option value="">All years</option></select><select id="month"><option value="">All months</option></select><select id="repo"><option value="">All albums</option></select></div></section>
+<section id="photoSection" class="section"><div class="section-head"><div><p class="eyebrow">THE PHOTO WALL</p><h2>Collected moments</h2></div><span id="photoCount"></span></div><div id="photoWall" class="photo-wall"></div><button id="photoMore" class="more" hidden>Load more moments ↓</button></section>
+<section id="videoSection" class="section" hidden><div class="section-head"><div><p class="eyebrow">MOVING MEMORIES</p><h2>Watch it again</h2></div><span id="videoCount"></span></div><div id="videoShelves" class="video-shelves"></div><button id="videoMore" class="more" hidden>Load more videos ↓</button></section>
+<footer><span>Made of moments.</span><span>Private library · Connected</span></footer>
+</main>
+<dialog id="photoViewer" class="lightbox"><button class="close" data-close="photoViewer">×</button><button id="prev" class="arrow left">‹</button><img id="bigPhoto" alt=""><button id="next" class="arrow right">›</button><div id="photoCaption" class="caption"></div></dialog>
+<dialog id="videoViewer" class="video-dialog"><button class="close" data-close="videoViewer">×</button><video id="player" controls playsinline preload="metadata"></video><div id="videoCaption" class="caption"></div></dialog>
+<div id="toast" role="status"></div><script src="app.js"></script>
+</body></html>
