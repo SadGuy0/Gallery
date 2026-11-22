@@ -1,5 +1,7 @@
 // Configure with your authenticated API host. Never put GitHub tokens here.
 const API = "https://YOUR-WORKER-DOMAIN.example.com";
+// Scan these repositories recursively through the authenticated API.
+const REPOSITORIES = ["memories-archive-001", "memories-archive-002"];
 const $ = s => document.querySelector(s);
 let mode="photos", data={photo:[],video:[]}, cursors={photo:null,video:null}, current=[], currentIndex=0;
 const qs = o => {const p=new URLSearchParams();Object.entries(o).forEach(([k,v])=>{if(v!==""&&v!=null)p.set(k,v)});return p.toString()};
@@ -10,8 +12,14 @@ async function api(path,options={}){const r=await fetch(API+path,{credentials:"i
 function url(item,kind="photo",thumb=true){return `${API}/api/${kind==="video"&&!thumb?"video":"image"}?${qs({repo:item.repo,path:thumb?(item.thumbnail||item.poster||item.path):item.path})}`}
 function dateLabel(x){return x.date||[x.year,x.month].filter(Boolean).join(" · ")||""}
 function safe(s){return String(s||"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]))}
-function filters(){return {year:$("#year").value,month:$("#month").value,repo:$("#repo").value}}
-async function options(){const [y,r]=await Promise.all([api("/api/years"),api("/api/repos")]);for(const v of (await y.json()).years||[])$("#year").add(new Option(v,v));for(const v of (await r.json()).repos||[])$("#repo").add(new Option(v,v))}
+function filters(){return {year:$("#year").value,month:$("#month").value,repo:$("#repo").value,repos:REPOSITORIES.join(",")}}
+async function options(){
+  const [y]=await Promise.all([
+    api(`/api/years?${qs({repos:REPOSITORIES.join(",")})}`)
+  ]);
+  for(const v of (await y.json()).years||[])$("#year").add(new Option(v,v));
+  for(const v of REPOSITORIES)$("#repo").add(new Option(v,v));
+}
 async function load(kind,reset=false){if(reset){data[kind]=[];cursors[kind]=null}const result=await (await api(`/api/media?${qs({kind,...filters(),cursor:cursors[kind],limit:60})}`)).json();data[kind].push(...(result.items||[]).map(x=>({...x,kind})));cursors[kind]=result.nextCursor||null;kind==="photo"?renderPhotos():renderVideos()}
 function visible(kind){const q=$("#search").value.trim().toLowerCase();return data[kind].filter(x=>!q||`${x.path} ${x.repo} ${x.date||""}`.toLowerCase().includes(q))}
 function renderPhotos(){const list=visible("photo"),wall=$("#photoWall");wall.replaceChildren();$("#photoCount").textContent=`${list.length.toLocaleString()} loaded`;list.forEach((x,i)=>{const b=document.createElement("button");b.className="photo-card";b.type="button";const img=document.createElement("img");img.loading="lazy";img.decoding="async";img.src=url(x);img.alt=x.path;const meta=document.createElement("div");meta.className="photo-meta";meta.innerHTML=`<span>${safe(dateLabel(x))}</span><span>${safe(x.repo)}</span>`;b.append(img,meta);b.onclick=()=>openPhoto(list,i);wall.append(b)});$("#photoMore").hidden=!cursors.photo}
@@ -20,7 +28,13 @@ function openPhoto(list,i){current=list;currentIndex=i;showPhoto(i);$("#photoVie
 function showPhoto(i){currentIndex=(i+current.length)%current.length;const x=current[currentIndex];$("#bigPhoto").src=url(x,"photo",false);$("#bigPhoto").alt=x.path;$("#photoCaption").textContent=`${dateLabel(x)} · ${x.repo} · ${x.path}`}
 async function openVideo(x){const v=$("#player");v.pause();v.src=url(x,"video",false);v.load();$("#videoCaption").textContent=`${dateLabel(x)} · ${x.repo} · ${x.path}`;$("#videoViewer").showModal();try{await v.play()}catch{}}
 async function refresh(){try{await Promise.all([load("photo",true),load("video",true)])}catch(e){say(e.message)}}
-function setMode(m){mode=m;document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b.dataset.mode===m));$("#photoSection").hidden=m==="videos";$("#videoSection").hidden=m==="photos";$("#pageTitle").innerHTML=m==="videos"?"Moving moments,<br><em>replayed.</em>":m==="photos"?"Little moments,<br><em>kept forever.</em>":"Your life,<br><em>in frames.</em>"}
+function setMode(m){
+  mode=m;
+  document.querySelectorAll("[data-mode]").forEach(b=>b.classList.toggle("active",b.dataset.mode===m));
+  $("#photoSection").hidden=m==="videos";
+  $("#videoSection").hidden=m==="photos";
+  $("#pageTitle").innerHTML=m==="videos"?"Moving moments,<br><em>replayed.</em>":"Little moments,<br><em>kept forever.</em>";
+}
 $("#loginButton").onclick=()=>location.href=API+"/auth/login";
 $("#logout").onclick=async()=>{try{await api("/auth/logout",{method:"POST"})}catch{}showLogin()};
 document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>setMode(b.dataset.mode));
